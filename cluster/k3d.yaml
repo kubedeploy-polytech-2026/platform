@@ -1,0 +1,18 @@
+apiVersion: k3d.io/v1alpha5
+kind: Simple
+metadata:
+  name: kubedeploy
+servers: 1
+agents: 1
+kubeAPI:
+  host: 127.0.0.1
+  hostIP: 127.0.0.1
+  hostPort: "6446"
+image: rancher/k3s:v1.36.5-k3s1@sha256:057cfd5a9d51b89f1f0ee139c28d5d5fdd5aa7ddeac2742a0ba90c6dbc0329bb
+options:
+  k3d:
+    wait: true
+    timeout: 3m
+  kubeconfig:
+    updateDefaultKubeconfig: true
+    switchCurrentContext: true
