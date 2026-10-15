@@ -45,6 +45,29 @@ make backend-status
 make backend-smoke
 ```
 
+## Argo CD
+
+Платформа использует Argo CD `v3.5.5`. Для локальной среды устанавливается
+non-HA вариант, закреплённый по release commit.
+
+```bash
+make argocd-up
+make argocd-status
+```
+
+Чтобы открыть UI:
+
+```bash
+make argocd-ui
+```
+
+Команда выведет одноразовый пароль администратора и запустит port-forward на
+`https://127.0.0.1:18081`. Пока port-forward работает, используйте имя
+пользователя `admin`.
+
+На этом этапе Argo CD только установлен. Application и управление системными
+компонентами через GitOps будут добавлены отдельной веткой.
+
 ## Удаление кластера
 
 ```bash
