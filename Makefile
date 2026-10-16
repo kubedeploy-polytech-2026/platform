@@ -5,7 +5,7 @@ CLUSTER_NAME := kubedeploy
 KUBE_CONTEXT := k3d-$(CLUSTER_NAME)
 BACKEND_IMAGE ?= kubedeploy-backend:v0.1.0
 
-.PHONY: help cluster-up cluster-status cluster-down backend-deploy backend-status backend-smoke argocd-up argocd-status argocd-ui
+.PHONY: help cluster-up cluster-status cluster-down backend-deploy backend-status backend-smoke argocd-up argocd-status argocd-ui bootstrap platform-status
 
 help:
 	@printf '%s\n' \
@@ -18,7 +18,9 @@ help:
 		'  backend-smoke       Check the backend health endpoint' \
 		'  argocd-up       Install Argo CD in the local cluster' \
 		'  argocd-status   Show Argo CD workloads' \
-		'  argocd-ui       Forward the Argo CD UI to localhost'
+		'  argocd-ui       Forward the Argo CD UI to localhost' \
+		'  bootstrap       Create the root Application and system layer' \
+		'  platform-status Show managed Applications and Envoy Gateway'
 
 cluster-up:
 	@command -v docker >/dev/null
@@ -65,3 +67,11 @@ argocd-status:
 
 argocd-ui:
 	@bash scripts/argocd-ui.sh
+
+bootstrap:
+	@bash scripts/bootstrap.sh
+
+platform-status:
+	@kubectl --context $(KUBE_CONTEXT) --namespace argocd get applications
+	@kubectl --context $(KUBE_CONTEXT) --namespace envoy-gateway-system \
+		get deployment,pod,service
