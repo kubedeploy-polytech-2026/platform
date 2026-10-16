@@ -1,0 +1,17 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: kubedeploy-platform
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  description: System components managed by the KubeDeploy platform
+  sourceRepos:
+    - docker.io/envoyproxy
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: envoy-gateway-system
+  clusterResourceWhitelist:
+    - group: "*"
+      kind: "*"
