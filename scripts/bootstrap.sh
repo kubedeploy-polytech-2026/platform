@@ -27,4 +27,14 @@ kubectl --context "$context" --namespace "$namespace" wait \
 
 kubectl --context "$context" --namespace envoy-gateway-system \
   rollout status deployment/envoy-gateway --timeout=300s
+
+kubectl --context "$context" --namespace "$namespace" wait \
+  --for=create application/gateway --timeout=120s
+kubectl --context "$context" --namespace "$namespace" wait \
+  --for=jsonpath='{.status.sync.status}'=Synced \
+  application/gateway --timeout=300s
+kubectl --context "$context" --namespace "$namespace" wait \
+  --for=jsonpath='{.status.health.status}'=Healthy \
+  application/gateway --timeout=300s
+bash "$project_root/scripts/gateway-wait.sh"
 kubectl --context "$context" --namespace "$namespace" get applications

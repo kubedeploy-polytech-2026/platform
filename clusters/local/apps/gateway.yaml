@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gateway
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  project: kubedeploy-platform
+  source:
+    repoURL: https://github.com/kubedeploy-polytech-2026/platform.git
+    targetRevision: main
+    path: gateway
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kubedeploy-gateway
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: false
+    retry:
+      limit: 5
+    syncOptions:
+      - ServerSideApply=true
+      - PruneLast=true
