@@ -26,24 +26,10 @@ make cluster-status
 
 Ожидаемый результат: один control-plane и один worker в состоянии `Ready`.
 
-## Минимальный запуск
+## Приложения
 
-Сначала соберите образ в соседнем репозитории:
-
-```bash
-cd ../backend
-make test
-make image
-```
-
-Затем импортируйте образ в k3d и разверните backend:
-
-```bash
-cd ../platform
-make backend-deploy
-make backend-status
-make backend-smoke
-```
+Score-описание backend, его Service и HTTPRoute находятся в соседнем
+репозитории `environment`.
 
 ## Argo CD
 
@@ -67,20 +53,32 @@ make argocd-ui
 
 ## Системный слой
 
-Root Application читает конфигурацию из этого репозитория и создаёт первый
-управляемый системный компонент - Envoy Gateway `v1.9.2`.
+Root Application читает `clusters/local` из ветки `main` этого репозитория.
+Отдельные Applications управляют Envoy Gateway `v1.9.2` и общим HTTP Gateway.
 
 ```bash
 make bootstrap
 make platform-status
 ```
 
-Для root Application и Envoy Gateway включены автоматическая синхронизация и
-prune, но отключён self-heal. Ручное изменение ресурса останется в кластере, а
-Argo CD покажет drift.
+Для root Application, Envoy Gateway и Gateway включены автоматическая
+синхронизация и prune, но отключён self-heal. Ручное изменение ресурса останется в кластере, а Argo CD покажет drift.
 
-На этом этапе Envoy Gateway установлен как controller. GatewayClass, Gateway и
-маршрут к backend будут добавлены отдельным изменением.
+## Общий HTTP Gateway
+
+Application `gateway` читает каталог `gateway` из `main` и создаёт:
+
+- namespace `kubedeploy-gateway`;
+- GatewayClass `kubedeploy-envoy` с controller Envoy Gateway;
+- EnvoyProxy `local` с Service типа `ClusterIP`;
+- Gateway `kubedeploy` с HTTP listener на порту 80 для `kubedeploy.local`.
+
+Локальный доступ идёт через port-forward.
+
+```bash
+make gateway-status
+make gateway-smoke
+```
 
 ## Удаление кластера
 

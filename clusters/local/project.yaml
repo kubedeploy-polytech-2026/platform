@@ -9,9 +9,12 @@ spec:
   description: System components managed by the KubeDeploy platform
   sourceRepos:
     - docker.io/envoyproxy
+    - https://github.com/kubedeploy-polytech-2026/platform.git
   destinations:
     - server: https://kubernetes.default.svc
       namespace: envoy-gateway-system
+    - server: https://kubernetes.default.svc
+      namespace: kubedeploy-gateway
   clusterResourceWhitelist:
     - group: "*"
       kind: "*"

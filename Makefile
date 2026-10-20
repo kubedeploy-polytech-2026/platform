@@ -3,9 +3,8 @@ SHELL := /bin/bash
 
 CLUSTER_NAME := kubedeploy
 KUBE_CONTEXT := k3d-$(CLUSTER_NAME)
-BACKEND_IMAGE ?= kubedeploy-backend:v0.1.0
 
-.PHONY: help cluster-up cluster-status cluster-down backend-deploy backend-status backend-smoke argocd-up argocd-status argocd-ui bootstrap platform-status
+.PHONY: help cluster-up cluster-status cluster-down argocd-up argocd-status argocd-ui bootstrap platform-status gateway-status gateway-smoke
 
 help:
 	@printf '%s\n' \
@@ -13,14 +12,13 @@ help:
 		'  cluster-up      Create the local k3d cluster' \
 		'  cluster-status  Show cluster nodes' \
 		'  cluster-down    Delete the local k3d cluster' \
-		'  backend-deploy      Import and deploy the local backend image' \
-		'  backend-status      Show the backend workload state' \
-		'  backend-smoke       Check the backend health endpoint' \
 		'  argocd-up       Install Argo CD in the local cluster' \
 		'  argocd-status   Show Argo CD workloads' \
 		'  argocd-ui       Forward the Argo CD UI to localhost' \
 		'  bootstrap       Create the root Application and system layer' \
-		'  platform-status Show managed Applications and Envoy Gateway'
+		'  platform-status Show managed Applications and Envoy Gateway' \
+		'  gateway-status  Show the shared HTTP Gateway' \
+		'  gateway-smoke   Check Gateway readiness and the Envoy HTTP listener'
 
 cluster-up:
 	@command -v docker >/dev/null
@@ -46,19 +44,6 @@ cluster-status:
 cluster-down:
 	@k3d cluster delete $(CLUSTER_NAME)
 
-backend-deploy:
-	@docker image inspect $(BACKEND_IMAGE) >/dev/null
-	@k3d image import --cluster $(CLUSTER_NAME) $(BACKEND_IMAGE)
-	@kubectl --context $(KUBE_CONTEXT) apply -f backend/backend.yaml
-	@kubectl --context $(KUBE_CONTEXT) --namespace kubedeploy-backend \
-		rollout status deployment/backend --timeout=180s
-
-backend-status:
-	@kubectl --context $(KUBE_CONTEXT) --namespace kubedeploy-backend get deployment,pod,service
-
-backend-smoke:
-	@bash scripts/smoke.sh
-
 argocd-up:
 	@bash scripts/argocd-up.sh
 
@@ -75,3 +60,12 @@ platform-status:
 	@kubectl --context $(KUBE_CONTEXT) --namespace argocd get applications
 	@kubectl --context $(KUBE_CONTEXT) --namespace envoy-gateway-system \
 		get deployment,pod,service
+
+gateway-status:
+	@kubectl --context $(KUBE_CONTEXT) get gatewayclass kubedeploy-envoy
+	@kubectl --context $(KUBE_CONTEXT) --namespace kubedeploy-gateway get gateway kubedeploy
+	@kubectl --context $(KUBE_CONTEXT) --namespace envoy-gateway-system \
+		get deployment,service -l gateway.envoyproxy.io/owning-gateway-name=kubedeploy,gateway.envoyproxy.io/owning-gateway-namespace=kubedeploy-gateway
+
+gateway-smoke:
+	@bash scripts/gateway-smoke.sh
