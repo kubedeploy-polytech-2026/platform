@@ -27,8 +27,7 @@ spec:
       name: gatekeeper-validating-webhook-configuration
       jqPathExpressions:
         - .webhooks[]?.clientConfig.caBundle
-    - group: ""
-      kind: Secret
+    - kind: Secret
       name: gatekeeper-webhook-server-cert
       namespace: gatekeeper-system
       jsonPointers:
