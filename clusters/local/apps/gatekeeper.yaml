@@ -1,0 +1,46 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gatekeeper
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  project: kubedeploy-platform
+  sources:
+    - repoURL: https://open-policy-agent.github.io/gatekeeper/charts
+      chart: gatekeeper
+      targetRevision: 3.23.1
+      helm:
+        releaseName: gatekeeper
+        valueFiles:
+          - $values/gatekeeper/values.yaml
+    - repoURL: https://github.com/kubedeploy-polytech-2026/platform.git
+      targetRevision: main
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: gatekeeper-system
+  ignoreDifferences:
+    - group: admissionregistration.k8s.io
+      kind: ValidatingWebhookConfiguration
+      name: gatekeeper-validating-webhook-configuration
+      jqPathExpressions:
+        - .webhooks[]?.clientConfig.caBundle
+    - group: ""
+      kind: Secret
+      name: gatekeeper-webhook-server-cert
+      namespace: gatekeeper-system
+      jsonPointers:
+        - /data
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: false
+    retry:
+      limit: 10
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - PruneLast=true
+      - RespectIgnoreDifferences=true

@@ -17,8 +17,12 @@ jobs:
         run: |
           image="$(sed -n 's/^          image: //p' controller/workload.yaml)"
           [[ "$image" =~ ^ghcr.io/kubedeploy-polytech-2026/deploy-controller@sha256:[a-f0-9]{64}$ ]]
-          for path in controller clusters/local; do
+          for path in controller clusters/local policies; do
             docker run --rm --entrypoint kubectl -v "$PWD:/workspace:ro" "$image" kustomize "/workspace/$path" >/dev/null
           done
       - name: Check Secret script syntax
         run: bash -n scripts/controller-secret.sh
+      - name: Install pinned Gator
+        run: bash scripts/install-gator.sh
+      - name: Test admission policies
+        run: python3 -m unittest discover -s tests -v

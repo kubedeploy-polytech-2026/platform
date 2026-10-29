@@ -1,0 +1,16 @@
+replicas: 1
+disableMutation: true
+enableExternalData: false
+validatingWebhookFailurePolicy: Fail
+validatingWebhookCheckIgnoreFailurePolicy: Ignore
+validatingWebhookMatchConditions:
+  - name: application-namespace
+    expression: has(request.namespace) && request.namespace == 'kubedeploy-demo'
+controllerManager:
+  resources:
+    requests: {cpu: 100m, memory: 256Mi}
+    limits: {cpu: 500m, memory: 512Mi}
+audit:
+  resources:
+    requests: {cpu: 100m, memory: 256Mi}
+    limits: {cpu: 500m, memory: 512Mi}
