@@ -1,0 +1,36 @@
+apiVersion: expansion.gatekeeper.sh/v1alpha1
+kind: ExpansionTemplate
+metadata:
+  name: application-workloads
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  applyTo:
+    - groups: [apps]
+      kinds: [Deployment, StatefulSet, DaemonSet, ReplicaSet]
+      versions: [v1]
+    - groups: [batch]
+      kinds: [Job]
+      versions: [v1]
+  templateSource: spec.template
+  generatedGVK:
+    group: ""
+    version: v1
+    kind: Pod
+---
+apiVersion: expansion.gatekeeper.sh/v1alpha1
+kind: ExpansionTemplate
+metadata:
+  name: application-cronjobs
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  applyTo:
+    - groups: [batch]
+      kinds: [CronJob]
+      versions: [v1]
+  templateSource: spec.jobTemplate.spec.template
+  generatedGVK:
+    group: ""
+    version: v1
+    kind: Pod

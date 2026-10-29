@@ -4,7 +4,7 @@ SHELL := /bin/bash
 CLUSTER_NAME := kubedeploy
 KUBE_CONTEXT := k3d-$(CLUSTER_NAME)
 
-.PHONY: help cluster-up cluster-status cluster-down argocd-up argocd-status argocd-ui bootstrap platform-status gateway-status gateway-smoke
+.PHONY: help cluster-up cluster-status cluster-down argocd-up argocd-status argocd-ui bootstrap platform-status gateway-status gateway-smoke policies-check policies-smoke
 
 help:
 	@printf '%s\n' \
@@ -69,3 +69,10 @@ gateway-status:
 
 gateway-smoke:
 	@bash scripts/gateway-smoke.sh
+
+policies-check:
+	@bash scripts/install-gator.sh
+	@python3 -m unittest discover -s tests -v
+
+policies-smoke:
+	@python3 tests/test_policies.py --live
