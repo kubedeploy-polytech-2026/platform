@@ -4,3 +4,4 @@ resources:
   - project.yaml
   - apps/envoy-gateway.yaml
   - apps/gateway.yaml
+  - apps/deploy-controller.yaml

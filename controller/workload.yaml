@@ -1,0 +1,100 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: deploy-controller-state
+  namespace: kubedeploy-system
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=false,Delete=false
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy-controller
+  namespace: kubedeploy-system
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: deploy-controller
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: deploy-controller
+    spec:
+      serviceAccountName: deploy-controller
+      automountServiceAccountToken: true
+      terminationGracePeriodSeconds: 45
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        fsGroup: 65532
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: controller
+          image: ghcr.io/kubedeploy-polytech-2026/deploy-controller@sha256:7b72448d17d3ade82aaa4aab0894d9bc78ea64c8ea5ea038bc3578e4f2b29313
+          args: [--execute, --state-dir=/state]
+          env:
+            - name: GITHUB_APP_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: deploy-controller
+                  key: GITHUB_APP_ID
+            - name: GITHUB_APP_INSTALLATION_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: deploy-controller
+                  key: GITHUB_APP_INSTALLATION_ID
+            - name: GITHUB_APP_PRIVATE_KEY_FILE
+              value: /var/run/github-app/private-key.pem
+            - name: KUBECONFIG
+              value: /etc/kubedeploy/kubeconfig
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: "1"
+              memory: 768Mi
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - name: state
+              mountPath: /state
+            - name: tmp
+              mountPath: /tmp
+            - name: kubeconfig
+              mountPath: /etc/kubedeploy
+              readOnly: true
+            - name: github-app
+              mountPath: /var/run/github-app
+              readOnly: true
+      volumes:
+        - name: state
+          persistentVolumeClaim:
+            claimName: deploy-controller-state
+        - name: tmp
+          emptyDir:
+            sizeLimit: 512Mi
+        - name: kubeconfig
+          configMap:
+            name: deploy-controller
+            items:
+              - key: kubeconfig
+                path: kubeconfig
+        - name: github-app
+          secret:
+            secretName: deploy-controller-github-app
+            defaultMode: 0440
