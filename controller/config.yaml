@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: deploy-controller
+  namespace: kubedeploy-system
+data:
+  GITHUB_APP_ID: "5521419"
+  GITHUB_APP_INSTALLATION_ID: "176424294"
+  kubeconfig: |
+    apiVersion: v1
+    kind: Config
+    clusters:
+      - name: local
+        cluster:
+          server: https://kubernetes.default.svc
+          certificate-authority: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+    users:
+      - name: controller
+        user:
+          tokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+    contexts:
+      - name: k3d-kubedeploy
+        context:
+          cluster: local
+          user: controller
+    current-context: k3d-kubedeploy

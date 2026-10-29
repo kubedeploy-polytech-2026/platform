@@ -15,6 +15,10 @@ spec:
       namespace: envoy-gateway-system
     - server: https://kubernetes.default.svc
       namespace: kubedeploy-gateway
+    - server: https://kubernetes.default.svc
+      namespace: kubedeploy-system
+    - server: https://kubernetes.default.svc
+      namespace: kubedeploy-demo
   clusterResourceWhitelist:
     - group: "*"
       kind: "*"
