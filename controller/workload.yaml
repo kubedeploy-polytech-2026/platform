@@ -18,6 +18,7 @@ metadata:
   namespace: kubedeploy-system
 spec:
   replicas: 1
+  progressDeadlineSeconds: 1800
   strategy:
     type: Recreate
   selector:
@@ -41,8 +42,32 @@ spec:
           type: RuntimeDefault
       containers:
         - name: controller
-          image: ghcr.io/kubedeploy-polytech-2026/deploy-controller@sha256:7b72448d17d3ade82aaa4aab0894d9bc78ea64c8ea5ea038bc3578e4f2b29313
-          args: [--execute, --state-dir=/state]
+          image: ghcr.io/kubedeploy-polytech-2026/deploy-controller@sha256:e81676409e4f9d7c556b946806e39551672b482f5b5b938495fe7fa2c8c02004
+          args: [--execute, --state-dir=/state, --health-address=:8081]
+          ports:
+            - name: health
+              containerPort: 8081
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: health
+            periodSeconds: 2
+            timeoutSeconds: 2
+            failureThreshold: 30
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: health
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: health
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 2
           env:
             - name: GITHUB_APP_ID
               valueFrom:
